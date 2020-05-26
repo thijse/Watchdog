@@ -144,7 +144,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == Debug XCOPY /S /Y "$(TargetDir)*" "$(TargetDir)..\..\..\MonitoredApplication\bin\Debug"</PostBuildEvent>
+    <PostBuildEvent>rem if $(ConfigurationName) == Debug XCOPY /S /Y "$(TargetDir)*" "$(TargetDir)..\..\..\MonitoredApplication\bin\Debug"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
