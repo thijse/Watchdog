@@ -12,7 +12,7 @@ namespace WatchDog
         private readonly EditForm _editApplicationsForm;
        // private readonly ApplicationWatcher _applicationWatcher;
         private readonly Configuration _configuration;
-        private ApplicationHandlerConfig _selectedItem;
+       // private ApplicationHandlerConfig _selectedItem;
        // private int _selectedItemNo;
        // private readonly ConfigurationSerializer<Configuration> _serializer;
         private ApplicationHandlerConfig _applicationHandlerConfig;
@@ -39,10 +39,7 @@ namespace WatchDog
         {
             _editApplicationsForm.buttonActivate.Enabled = !isActive;
             _editApplicationsForm.buttonDeactivate.Enabled = isActive;
-            if (_selectedItem != null)
-            {
-                _selectedItem.Active = isActive;
-            }
+            _applicationHandlerConfig.Active = isActive;
         }
 
         //private void UpdateHandler()
