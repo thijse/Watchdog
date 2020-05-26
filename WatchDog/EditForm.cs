@@ -60,11 +60,6 @@ namespace WatchDog
             }
         }
 
-        private void buttonAcceptChanges_Click(object sender, EventArgs e)
-        {
-
-        }
-
         //private void ButtonActivateClick(object sender, EventArgs e)
         //{
         //    if (ActivateEvent != null) ActivateEvent(this,null);

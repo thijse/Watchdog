@@ -39,9 +39,6 @@
             this.buttonEditProcess = new System.Windows.Forms.Button();
             this.buttonDeleteProcess = new System.Windows.Forms.Button();
             this.buttonRebootSettings = new System.Windows.Forms.Button();
-            this.buttonGeneralSettings = new System.Windows.Forms.Button();
-            this.buttonStartStopWatchdog = new System.Windows.Forms.Button();
-            this.label3 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -53,13 +50,13 @@
             this.listBoxMonitoredApplications.FormattingEnabled = true;
             this.listBoxMonitoredApplications.Location = new System.Drawing.Point(12, 4);
             this.listBoxMonitoredApplications.Name = "listBoxMonitoredApplications";
-            this.listBoxMonitoredApplications.Size = new System.Drawing.Size(481, 95);
+            this.listBoxMonitoredApplications.Size = new System.Drawing.Size(481, 108);
             this.listBoxMonitoredApplications.TabIndex = 0;
             // 
             // buttonAddProcess
             // 
             this.buttonAddProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonAddProcess.Location = new System.Drawing.Point(11, 105);
+            this.buttonAddProcess.Location = new System.Drawing.Point(12, 118);
             this.buttonAddProcess.Name = "buttonAddProcess";
             this.buttonAddProcess.Size = new System.Drawing.Size(75, 23);
             this.buttonAddProcess.TabIndex = 1;
@@ -112,7 +109,7 @@
             this.groupBox1.Controls.Add(this.textBoxApplicationPath);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Location = new System.Drawing.Point(11, 150);
+            this.groupBox1.Location = new System.Drawing.Point(12, 163);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(481, 103);
             this.groupBox1.TabIndex = 2;
@@ -122,7 +119,7 @@
             // buttonEditProcess
             // 
             this.buttonEditProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonEditProcess.Location = new System.Drawing.Point(92, 105);
+            this.buttonEditProcess.Location = new System.Drawing.Point(93, 118);
             this.buttonEditProcess.Name = "buttonEditProcess";
             this.buttonEditProcess.Size = new System.Drawing.Size(75, 23);
             this.buttonEditProcess.TabIndex = 3;
@@ -132,7 +129,7 @@
             // buttonDeleteProcess
             // 
             this.buttonDeleteProcess.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonDeleteProcess.Location = new System.Drawing.Point(173, 105);
+            this.buttonDeleteProcess.Location = new System.Drawing.Point(174, 118);
             this.buttonDeleteProcess.Name = "buttonDeleteProcess";
             this.buttonDeleteProcess.Size = new System.Drawing.Size(75, 23);
             this.buttonDeleteProcess.TabIndex = 4;
@@ -141,52 +138,18 @@
             // 
             // buttonRebootSettings
             // 
-            this.buttonRebootSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonRebootSettings.Location = new System.Drawing.Point(381, 297);
+            this.buttonRebootSettings.Location = new System.Drawing.Point(382, 283);
             this.buttonRebootSettings.Name = "buttonRebootSettings";
             this.buttonRebootSettings.Size = new System.Drawing.Size(111, 28);
             this.buttonRebootSettings.TabIndex = 26;
             this.buttonRebootSettings.Text = "Reboot settings";
             this.buttonRebootSettings.UseVisualStyleBackColor = true;
             // 
-            // buttonGeneralSettings
-            // 
-            this.buttonGeneralSettings.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonGeneralSettings.Location = new System.Drawing.Point(265, 297);
-            this.buttonGeneralSettings.Name = "buttonGeneralSettings";
-            this.buttonGeneralSettings.Size = new System.Drawing.Size(111, 28);
-            this.buttonGeneralSettings.TabIndex = 27;
-            this.buttonGeneralSettings.Text = "General settings";
-            this.buttonGeneralSettings.UseVisualStyleBackColor = true;
-            // 
-            // buttonStartStopWatchdog
-            // 
-            this.buttonStartStopWatchdog.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.buttonStartStopWatchdog.Location = new System.Drawing.Point(11, 297);
-            this.buttonStartStopWatchdog.Name = "buttonStartStopWatchdog";
-            this.buttonStartStopWatchdog.Size = new System.Drawing.Size(167, 28);
-            this.buttonStartStopWatchdog.TabIndex = 28;
-            this.buttonStartStopWatchdog.Text = "Start Watchdog";
-            this.buttonStartStopWatchdog.UseVisualStyleBackColor = true;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(14, 329);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(118, 12);
-            this.label3.TabIndex = 29;
-            this.label3.Text = "global key:  [CTRL] [ALT] w";
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(505, 349);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.buttonStartStopWatchdog);
-            this.Controls.Add(this.buttonGeneralSettings);
+            this.ClientSize = new System.Drawing.Size(505, 323);
             this.Controls.Add(this.buttonRebootSettings);
             this.Controls.Add(this.buttonDeleteProcess);
             this.Controls.Add(this.buttonEditProcess);
@@ -200,7 +163,6 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -216,8 +178,5 @@
         public System.Windows.Forms.Button buttonEditProcess;
         public System.Windows.Forms.Button buttonDeleteProcess;
         public System.Windows.Forms.Button buttonRebootSettings;
-        public System.Windows.Forms.Button buttonGeneralSettings;
-        public System.Windows.Forms.Button buttonStartStopWatchdog;
-        private System.Windows.Forms.Label label3;
     }
 }

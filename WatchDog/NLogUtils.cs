@@ -1,4 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using NLog;
 
@@ -16,7 +21,10 @@ namespace WatchDog
                 if (_namedLogger == null)
                 {
                     var path = Path.GetDirectoryName(Application.ExecutablePath);
-                    _namedLogger = LogManager.GetLogger("WatchdogServer");    
+                    //if (!string.IsNullOrEmpty(path) && Directory.Exists(path)) Directory.SetCurrentDirectory(path);
+
+                    _namedLogger = LogManager.GetLogger("WatchdogServer");
+     
                 }
                 return _namedLogger;
             }

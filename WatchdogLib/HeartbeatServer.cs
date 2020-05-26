@@ -10,32 +10,18 @@ namespace WatchdogLib
     {
         public HeartbeatClient(string name)
         {
-            Name = name;          
+            Name        = name;
+            RequestKill = false;
+            LastHeartbeat = DateTime.Now;
             LogManager.GetLogger("WatchdogServer");
-            Restart();
-        }
 
-        public void Reset()
-        {
-            RequestKill = false;
-            LastHeartbeat = DateTime.Now;
         }
-
-        public void Restart()
-        {
-            Tries = 0;
-            RequestKill = false;
-            LastHeartbeat = DateTime.Now;
-        }
-
         public string Name            { get; set; }
         public string ProcessName     { get; set; }
         public DateTime LastHeartbeat { get; set; }
         public bool RequestKill       { get; set; }
         public DateTime KillTime      { get; set; }
-        public int Tries              { get; set; }
     }
-
 
     public class HeartbeatServer
     {
@@ -49,8 +35,10 @@ namespace WatchdogLib
         private const string PipeName = "named_pipe_watchdog";
         private readonly NamedPipeServer<string> _server  = new NamedPipeServer<string>(PipeName);
         private readonly ISet<HeartbeatClient>   _clients = new HashSet<HeartbeatClient>();
-        private DateTime _serverStarted;
+        private readonly DateTime _serverStarted;
 
+     //   public uint HardTimeout                 { get; set; }
+       // public uint SoftTimeout                 { get; set; }
         public ISet<HeartbeatClient> Clients    { get { return _clients; } }
 
         private static HeartbeatServer _instance;
@@ -68,7 +56,6 @@ namespace WatchdogLib
         }
 
         public Logger Logger { get; set; }
-        
 
         private HeartbeatServer()
         {
@@ -76,19 +63,12 @@ namespace WatchdogLib
             _server.ClientConnected    += OnClientConnected;
             _server.ClientDisconnected += OnClientDisconnected;
             _server.ClientMessage      += OnClientMessage;
-            _serverStarted              = DateTime.Now;
+            //_serverStarted              = DateTime.Now;
+            //HardTimeout                 = hardTimeout;
+            //SoftTimeout                 = softTimeout;
+            _serverStarted                = DateTime.Now;
             _server.Start();                        
-        }
-
-        public void Restart()
-        {
-            _serverStarted              = DateTime.Now;
-            Clients.Clear();
-            //foreach (var client in Clients)
-            //{
-            //    client.Restart();
-            //}
-        }
+        }        
 
         private void OnClientMessage(NamedPipeConnection<string, string> connection, string message)
         {
@@ -102,10 +82,7 @@ namespace WatchdogLib
                 case (int)Commands.Heartbeat:
                     {
                         var client = FindByName(connection.Name);
-                        if (!string.IsNullOrEmpty(connection.Name) && client == null)                        
-                        {
-                            _clients.Add(new HeartbeatClient(connection.Name));
-                        }
+                        if (client==null) break;
                         if (args.Length < 2) return;
                         client.ProcessName = args[1];
                         client.LastHeartbeat = DateTime.Now;
@@ -115,12 +92,7 @@ namespace WatchdogLib
                 case (int)Commands.RequestKill:
                     {
                         var client = FindByName(connection.Name);
-                        if (!string.IsNullOrEmpty(connection.Name) && client == null)                        
-                        {
-                            _clients.Add(new HeartbeatClient(connection.Name));
-                        }
-
-
+                        if (client == null) break;
                         if (args.Length < 2) return;
                         client.ProcessName = args[1];
                         
@@ -153,6 +125,7 @@ namespace WatchdogLib
             {                
                 _clients.Add(new HeartbeatClient(connection.Name));
             }
+            //SendCommand(Commands.SetTimeOut, HardTimeout);
         }
 
         private void OnClientDisconnected(NamedPipeConnection<string, string> connection)
@@ -170,6 +143,81 @@ namespace WatchdogLib
         {
             return _clients.FirstOrDefault((client) => client.ProcessName == processName);
         }
+        /// <summary>
+        /// Returns true if the last heartbeat was longer ago than the timeout. 
+        /// Note that if the process is not connected, the function returns false.
+        /// </summary>
+        /// <param name="processName">Name of process</param>
+        /// <returns></returns>
+        //public bool HeartbeatHardTimeout(string processName)
+        //{
+        //    var client = FindByProcessName(processName);
+        //    if (client == null)
+        //    {
+        //        // No process with this name connected, so no timeout
+        //        return false;
+        //    }
+        //    else
+        //    {
+        //        if ((DateTime.Now - _serverStarted).TotalSeconds < 2*HardTimeout)
+        //        {
+        //            // Server is not running long enough to have reliably received a heartbeat
+        //            return false;
+        //        }
+        //        else
+        //        {
+        //            // Check if last heartbeat was before timeout
+        //            return ((DateTime.Now - client.LastHeartbeat).TotalSeconds > HardTimeout);
+        //        }
+        //    }
+        //}
+
+        //public bool HeartbeatHardTimeoutOrDisconnect(string processName)
+        //{          
+        //    return HeartbeatHardTimeout(processName) || !Connected(processName);
+            
+        //}
+
+        ///// <summary>
+        ///// Returns true if the last heartbeat was longer ago than the timeout. 
+        ///// Note that if the process is not connected, the function returns false.
+        ///// </summary>
+        ///// <param name="processName">Name of process</param>
+        ///// <returns></returns>
+        //public bool HeartbeatSoftTimeout(string processName)
+        //{
+        //    var client = FindByProcessName(processName);
+        //    if (client == null)
+        //    {
+        //        // No process with this name connected, so no timeout
+        //        return false;
+        //    }
+        //    else
+        //    {
+        //        if ((DateTime.Now - _serverStarted).TotalSeconds < 2 * SoftTimeout)
+        //        {
+        //            // Server is not running long enough to have reliably received a heartbeat
+        //            return false;
+        //        }
+        //        else
+        //        {
+        //            // Check if last heartbeat was before timeout
+        //            return ((DateTime.Now - client.LastHeartbeat).TotalSeconds > SoftTimeout);
+        //        }
+        //    }
+        //}
+
+        //public bool HeartbeatSoftTimeoutOrDisconnect(string processName)
+        //{
+        //    return HeartbeatSoftTimeout(processName) || !Connected(processName);
+        //}
+
+
+        public bool HeartbeatTimedOutOrDisconnect(string processName, uint timeout)
+        {
+            return HeartbeatTimedOut(processName, timeout) || !Connected(processName);
+        }
+
 
         public bool HeartbeatTimedOut(string processName, uint timeout)
         {
@@ -181,12 +229,12 @@ namespace WatchdogLib
             }
             else
             {
-                //if ((DateTime.Now - _serverStarted).TotalSeconds < 2 * timeout)
-                //{
-                //    // Server is not running long enough to have reliably received a heartbeat
-                //    return false;
-                //}
-                //else
+                if ((DateTime.Now - _serverStarted).TotalSeconds < 2 * timeout)
+                {
+                    // Server is not running long enough to have reliably received a heartbeat
+                    return false;
+                }
+                else
                 {
                     // Check if last heartbeat was before timeout
                     return ((DateTime.Now - client.LastHeartbeat).TotalSeconds > timeout);
@@ -228,6 +276,5 @@ namespace WatchdogLib
         //{
         //    _server.PushMessage(command.ToString() + "," + argument1.ToString() + "," + argument2.ToString());
         //}
-
     }
 }

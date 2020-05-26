@@ -37,7 +37,7 @@ namespace WatchdogLib
 
         private void DoWorkImpl(object oAction)
         {
-            var action = (Action) oAction;
+            var action = (Action)oAction;
             try
             {
                 action();
@@ -57,8 +57,8 @@ namespace WatchdogLib
 
         private void Fail(Exception exception)
         {
-            //if (Error != null)
-            //    Error(exception);
+            if (Error != null)
+                Error(exception);
         }
 
         private void Callback(Action action)

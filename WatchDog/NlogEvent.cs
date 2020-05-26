@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+
 using NLog;
 using NLog.Targets;
 using System.Timers;
@@ -49,6 +50,7 @@ namespace WatchDog
 
         public static void Register(NlogEventTarget nlogEventTarget)
         {
+
             nlogEventTarget.Name = "event";
             nlogEventTarget.Layout = "${longdate} ${uppercase:${level}} ${message}";
 

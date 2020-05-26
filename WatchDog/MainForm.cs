@@ -1,6 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using Utilities;
 
 namespace WatchDog
 {
@@ -52,6 +60,19 @@ namespace WatchDog
             }
         }
 
+        //private void ButtonActivateClick(object sender, EventArgs e)
+        //{
+        //    if (ActivateEvent != null) ActivateEvent(this,null);
+        //}
 
+        //private void ButtonDeactivateClick(object sender, EventArgs e)
+        //{
+        //    if (DeactivateEvent != null) DeactivateEvent(this, null);
+        //}
+
+        //private void buttonAddProcess_Click(object sender, EventArgs e)
+        //{
+        //    if (AddEvent != null) DeactivateEvent(this, null);
+        //}
     }
 }

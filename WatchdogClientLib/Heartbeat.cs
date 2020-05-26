@@ -3,33 +3,24 @@ using System.Diagnostics;
 
 namespace WatchdogClient
 {
+
     public class Heartbeat
     {
         private const string PipeName = "named_pipe_watchdog";
-        private static Heartbeat _instance;
         private readonly NamedPipeClient<string> _client = new NamedPipeClient<string>(PipeName);
+        private readonly string _processName;
         private Stopwatch _stopwatchHeartBeat;
-
-        private Heartbeat()
+        public uint Timeout { get; private set; }
+        public Heartbeat(string processName)
         {
-            ProcessName = Process.GetCurrentProcess().ProcessName;
+            _processName = processName;
             Initialize();
         }
 
-        public string ProcessName { get; set; }
-        public uint Timeout { get; private set; }
-
-
-        public static Heartbeat Instance
+        public Heartbeat()
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new Heartbeat();
-                }
-                return _instance;
-            }
+            _processName = Process.GetCurrentProcess().ProcessName;
+            Initialize();
         }
 
         private void Initialize()
@@ -44,61 +35,47 @@ namespace WatchdogClient
             _stopwatchHeartBeat.Start();
         }
 
-        public void Start()
-        {
-            _stopwatchHeartBeat.Start();
-        }
-
-        public void Stop()
-        {
-            _stopwatchHeartBeat.Stop();
-        }
-
         private void OnServerMessage(NamedPipeConnection<string, string> connection, string message)
         {
             var args = message.Split(',');
-            if (args.Length == 0) return;
-            uint command;
-            if (!uint.TryParse(args[0], out command)) return;
+            if (args.Length ==0 ) return;
+            uint command; if (!uint.TryParse(args[0], out command)) return;
 
             switch (command)
             {
                 case (int) Commands.SetTimeOut:
                     if (args.Length < 2) return;
                     uint timeout;
-                    if (uint.TryParse(args[1], out timeout))
-                    {
-                        Timeout = timeout;
-                    }
+                    if (uint.TryParse(args[1], out timeout)) { Timeout = timeout; }
                     break;
             }
         }
 
-        public void SendHeartbeat(string processName = "")
+        public void SendHeartbeat()
         {
+
             if (_stopwatchHeartBeat.ElapsedMilliseconds > 25)
             {
                 _stopwatchHeartBeat.Restart();
-                SendCommand(Commands.Heartbeat, processName != "" ? processName : ProcessName);
+                SendCommand(Commands.Heartbeat, _processName);                
             }
         }
 
-
-
         public void RequestKill()
         {
-            SendCommand(Commands.RequestKill, ProcessName);
+            SendCommand(Commands.RequestKill, _processName);
         }
 
         public void RequestKill(uint sec)
         {
-            SendCommand(Commands.RequestKill, ProcessName, sec);
+            SendCommand(Commands.RequestKill, _processName,sec);
         }
 
         public void RequestKill(TimeSpan time)
         {
-            SendCommand(Commands.RequestKill, ProcessName, time.TotalSeconds);
+            SendCommand(Commands.RequestKill, _processName,time.TotalSeconds);
         }
+
 
         private void OnDisconnected(NamedPipeConnection<string, string> connection)
         {
@@ -106,7 +83,15 @@ namespace WatchdogClient
 
         private void OnConnected(NamedPipeConnection<string, string> connection)
         {
-            SendCommand(Commands.Heartbeat, ProcessName);
+            SendCommand(Commands.Heartbeat, _processName);
+        }
+
+
+        private enum Commands
+        {
+            SetTimeOut,
+            Heartbeat,
+            RequestKill,
         }
 
         //private void SendCommand(Commands command, string[] arguments)
@@ -120,20 +105,13 @@ namespace WatchdogClient
         //    _client.PushMessage(command.ToString());
         //}
         private void SendCommand<T>(Commands command, T argument)
-        {
-            _client.PushMessage((int) command + "," + argument);
+        {           
+            _client.PushMessage(((int)command).ToString() + "," +argument.ToString());
         }
 
-        private void SendCommand<T1, T2>(Commands command, T1 argument1, T2 argument2)
+        private void SendCommand<T1,T2>(Commands command, T1 argument1, T2 argument2)
         {
-            _client.PushMessage((int) command + "," + argument1 + "," + argument2);
-        }
-
-        private enum Commands
-        {
-            SetTimeOut,
-            Heartbeat,
-            RequestKill
+            _client.PushMessage(((int)command).ToString() + "," + argument1.ToString() + "," + argument2.ToString());
         }
     }
 }

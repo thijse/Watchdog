@@ -43,138 +43,71 @@ namespace WatchdogLib
         }
     }
 
-    public enum Responsiveness
-    {
-        Responding,
-        Unresponding,
-        ToEarlyToTell    ,
-    }
-
     public class ProcessHandler
     {
 
         private readonly object _exitedLock = new object();
-        private readonly CountDown _nonresponsiveIntervalCountdown;
-        private readonly CountDown _sinceResetIntervalCountdown;
-        private readonly CountDown _fromStartCountDown;
+        private Stopwatch _nonresponsiveInterval;
+        private Stopwatch _fromStart;
 
         public DataReceivedEventHandler OutputHandler;
         public EventHandler<ProcessMessageArgs> ErrorOutputHandler;
         
-
         public event EventHandler<ProcessStatusArgs> ExitHandler;
         public event EventHandler<ProcessMessageArgs> ErrorHandler;
+
+
  
+        public int NonResponsiveInterval  { get; set; }
         public string Executable          { get; set; }
+
         public string Args                { get; set; }
+
         public bool WaitForExit           { get; set; }
         public bool RunInDir              { get; set; }
-        public int NonResponsiveInterval  { get; set; }
-        public int Tries                  { get; set; }
-        public int StartingInterval       { get; set; }
-        public bool Running               { get; set; }
-        public Process Process            { get; private set; }
-        public string Name                { get; private set; }
-        //public bool NotRespondingAfterInterval
-        //{
-        //    get { return (!Responding && _nonresponsiveIntervalCountdown.ElapsedSeconds > NonResponsiveInterval); }
-        //}
-        public bool IsStarting
-        {
-            get { return (_fromStartCountDown.ElapsedSeconds < StartingInterval); }
-        }
+        public uint NonresponsiveInterval { get; set; }
+
+        public uint StartingInterval      { get; set; }
+
         public bool HasExited
         {
             get { return (Process == null) || Process.HasExited; }
         }
 
-        //public bool Responding
-        //{
-        //    get
-        //    {
-        //        // todo: add heartbeat
-        //        if (!Process.Responding)
-        //        {
-        //            if (!_nonresponsiveIntervalCountdown.IsRunning) _nonresponsiveIntervalCountdown.Restart(NonResponsiveInterval);
-        //        }
-        //        else
-        //        {
-        //            _nonresponsiveIntervalCountdown.Reset(NonResponsiveInterval);
-        //        }
-
-        //        return (Process == null) || Process.Responding;
-        //    }
-        //}
-
         public bool Responding
         {
             get
             {
-                if (Process==null) return false; 
-
-                if (Process.Responding)
+                // todo: add heartbeat
+                if (!Process.Responding)
                 {
-                    _nonresponsiveIntervalCountdown.Restart(NonResponsiveInterval);
-                    return true;
+                    if (!_nonresponsiveInterval.IsRunning) _nonresponsiveInterval.Restart();
                 }
                 else
                 {
-                    return false;
-                }
-            }
-        }
-
-
-        public Responsiveness NotRespondingAfterInterval
-        {
-            get
-            {
-                // todo: add heartbeat
-
-                if (Process==null) return Responsiveness.Unresponding; 
-
-                if (Process.Responding)
-                {
-                    _nonresponsiveIntervalCountdown.Restart(NonResponsiveInterval);
-                    return Responsiveness.Responding;
-                }
-                
-                if (_sinceResetIntervalCountdown.ElapsedSeconds < NonResponsiveInterval)
-                {
-                    return Responsiveness.ToEarlyToTell;
+                    _nonresponsiveInterval.Reset();
                 }
 
-                if (_nonresponsiveIntervalCountdown.ElapsedSeconds < NonResponsiveInterval)
-                {
-                    return Responsiveness.ToEarlyToTell;
-                }
-
-                return Responsiveness.Unresponding;
-
-
+                return (Process == null) || Process.Responding;
             }
         }
 
 
         public ProcessHandler()
         {
-            WaitForExit                     = true;
-            RunInDir                        = true;
-
-            _nonresponsiveIntervalCountdown = new CountDown(0);
-            _fromStartCountDown             = new CountDown(0);
-            _sinceResetIntervalCountdown    = new CountDown(0);
-            StartingInterval                = 5;
-            NonResponsiveInterval           = 2;
-            Tries                           =  0;
-
+            WaitForExit            = true;
+            RunInDir               = true;
+            NonresponsiveInterval  = 2000;
+            StartingInterval       = 5000;
+            _nonresponsiveInterval = new Stopwatch();
+            _fromStart             = new Stopwatch();
         }
 
-        public void CallExecutable(string executable, string name, string args)
+
+        public void CallExecutable(string executable, string args)
         {
             Args = args;
             Executable = executable;
-            Name = name;
             CallExecutable();
         }
 
@@ -186,8 +119,7 @@ namespace WatchdogLib
                 Process.OutputDataReceived += Output;
                 Process.ErrorDataReceived  += OutputError;
                 Name                        = Process.ProcessName;
-                Executable                  = Process.MainModule.FileName;
-                _fromStartCountDown.Restart();
+                _fromStart.Restart();
                 if (WaitForExit)
                 {
                     Process.WaitForExit();
@@ -219,10 +151,11 @@ namespace WatchdogLib
             Process = null;
         }
 
-        public bool CallExecutable()
+
+        public void CallExecutable()
         {
             
-            if (!File.Exists(Executable)) return false;
+            if (!File.Exists(Executable)) return;
             var commandLine = Executable;
             Trace.WriteLine("Running command: " + Executable + " " + Args);
             var psi = new ProcessStartInfo(commandLine)
@@ -248,9 +181,7 @@ namespace WatchdogLib
                 Process.BeginErrorReadLine();
                 Process.OutputDataReceived += Output;
                 Process.ErrorDataReceived += OutputError;
-                //_fromStartCountDown.Restart();
-                Reset();
-                if (Process.HasExited) return false;
+                _fromStart.Restart();
                 Name = Process.ProcessName;
 
                 // Watch process for not responding
@@ -271,9 +202,8 @@ namespace WatchdogLib
                 {
                     if (ExitHandler != null) ExitHandler(this, new ProcessStatusArgs(-1, Process));
                 }
-                return false;
+
             }
-            return true;
         }
 
         private void ProcessExited(object sender, EventArgs e)
@@ -281,10 +211,28 @@ namespace WatchdogLib
             Running = true;
         }
 
+        public bool Running { get; set; }
+
+
+        public Process Process { get; private set; }
+        public string Name { get; private set; }
+
+        public bool NotRespondingAfterInterval
+        {
+            get { return (!Responding && _nonresponsiveInterval.ElapsedMilliseconds > NonresponsiveInterval); }
+        }
+
+        public bool IsStarting
+        {
+            get { return (_fromStart.ElapsedMilliseconds < StartingInterval); }
+        }
+
+
         public void Close()
         {
             EndProcess();
         }
+
    
         private void Output(object sender, DataReceivedEventArgs dataReceivedEventArgs)
         {
@@ -308,18 +256,6 @@ namespace WatchdogLib
             return ProcessUtils.KillProcess(Process);
             // Todo set state indicating that kill has been tried
         }
-
-        public void Reset()
-        {
-            _sinceResetIntervalCountdown.Restart();
-            _nonresponsiveIntervalCountdown.Restart();
-        }
-
-        //public void Restart()
-        //{
-        //    _nonresponsiveIntervalCountdown.Restart();
-        //    _fromStartCountDown.Restart();
-        //}
     }
 
 

@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using NLog;
-using utilities.Windows;
 using Utilities;
 
 namespace WatchdogLib
@@ -13,49 +10,40 @@ namespace WatchdogLib
     public class ApplicationHandler
     {
         private readonly HeartbeatServer _heartbeatServer;
-        private DateTime _lastTimeStarted;
-        private const int MaxTries = 3;
+        //private ApplicationHandlerConfig _applicationHandlerConfig;
 
-        public List<ProcessHandler> ProcessHandlers  { get; set; }
+        public List<ProcessHandler> ProcessHandlers { get; set; }
         public int NonResponsiveInterval             { get; set; }
         public string ApplicationPath                { get; set; }
         public string ApplicationName                { get; set; }
-        public string ApplicationArguments           { get; set; }
         public bool UseHeartbeat                     { get; set; }
-
-        public bool IgnoreHeartBeatIfNeverAcquired   { get; set; }
         public Logger Logger                         { get; set; }
         public bool GrantKillRequest                 { get; set; }
-        public int HeartbeatInterval                 { get; set; }
+        public uint HeartbeatInterval                { get; set; }
         public int MaxProcesses                      { get; set; }
         public int MinProcesses                      { get; set; }
-   
+
         public bool Active                           { get; set; }
         public bool KeepExistingNoProcesses          { get; set; }
-        public int StartingInterval                  { get; set; }
-        public int TimeBetweenRetry                  { get; set; }
+        public uint StartupMonitorDelay               { get; set; }
+        public ApplicationHandler(string applicationName,string applicationPath, int nonResponsiveInterval, uint heartbeatInterval = 15, int minProcesses = 1, int maxProcesses=1, bool keepExistingNoProcesses = false, bool useHeartbeat = false, bool grantKillRequest = true, uint startupMonitorDelay=20, bool active= true)
+        {
+            Logger                  = LogManager.GetLogger("WatchdogServer");
+            ProcessHandlers         = new List<ProcessHandler>();
+            ApplicationName         = applicationName;
+            ApplicationPath         = applicationPath;
+            NonResponsiveInterval   = nonResponsiveInterval;
+            HeartbeatInterval       = heartbeatInterval;
+            MinProcesses            = minProcesses;
+            MaxProcesses            = maxProcesses;
+            KeepExistingNoProcesses = keepExistingNoProcesses;
+            UseHeartbeat            = useHeartbeat;
+            GrantKillRequest        = grantKillRequest;
+            StartupMonitorDelay     = startupMonitorDelay;
 
-        //public ApplicationHandler(string applicationName,string applicationPath, string applicationArguments, int nonResponsiveInterval, int heartbeatInterval, int minProcesses, int maxProcesses, bool keepExistingNoProcesses, bool useHeartbeat, bool grantKillRequest, int startingInterval, bool active, int timeBetweenRetry)
-        //{
-        //    Logger                  = LogManager.GetLogger("WatchdogServer");
-        //    ProcessHandlers         = new List<ProcessHandler>();
-        //    ApplicationName         = applicationName;
-        //    ApplicationPath         = applicationPath;
-        //    ApplicationArguments    = applicationArguments;
-        //    HeartbeatInterval       = heartbeatInterval;
-        //    MinProcesses            = minProcesses;
-        //    MaxProcesses            = maxProcesses;
-        //    KeepExistingNoProcesses = keepExistingNoProcesses;
-        //    UseHeartbeat            = useHeartbeat;
-        //    GrantKillRequest        = grantKillRequest;
-        //    StartingInterval        = startingInterval;
-        //    NonResponsiveInterval   = nonResponsiveInterval;
-        //    Active                  = active;
-        //    TimeBetweenRetry        = timeBetweenRetry;
-        //    _heartbeatServer        = HeartbeatServer.Instance;
-        //    _lastTimeStarted        = DateTime.MinValue;
-            
-        //}
+            _heartbeatServer        = HeartbeatServer.Instance;
+            Active                  = active;
+        }
 
         public ApplicationHandler(ApplicationHandlerConfig applicationHandlerConfig)
         {
@@ -63,65 +51,40 @@ namespace WatchdogLib
             ProcessHandlers = new List<ProcessHandler>();
             Set(applicationHandlerConfig);
             _heartbeatServer = HeartbeatServer.Instance;
-            SleepDetector.Instance.SleepTimeOut = 60*1000;
+            ;
         }
 
         public void Set(ApplicationHandlerConfig applicationHandlerConfig)
         {
-            ApplicationName                = applicationHandlerConfig.ApplicationName;
-            ApplicationPath                = applicationHandlerConfig.ApplicationPath;
-            ApplicationArguments           = applicationHandlerConfig.ApplicationArguments;
-            NonResponsiveInterval          = applicationHandlerConfig.NonResponsiveInterval;
-            HeartbeatInterval              = applicationHandlerConfig.HeartbeatInterval;
-            MinProcesses                   = applicationHandlerConfig.MinProcesses;
-            MaxProcesses                   = applicationHandlerConfig.MaxProcesses;
-            KeepExistingNoProcesses        = applicationHandlerConfig.KeepExistingNoProcesses;
-            UseHeartbeat                   = applicationHandlerConfig.UseHeartbeat;
-            IgnoreHeartBeatIfNeverAcquired = applicationHandlerConfig.IgnoreHeartBeatIfNeverAcquired;
-            GrantKillRequest               = applicationHandlerConfig.GrantKillRequest;
-            Active                         = applicationHandlerConfig.Active;
-            StartingInterval               = applicationHandlerConfig.StartupMonitorDelay;
-            Active                         = applicationHandlerConfig.Active;
-            TimeBetweenRetry               = applicationHandlerConfig.TimeBetweenRetry;
+            ApplicationName         = applicationHandlerConfig.ApplicationName;
+            ApplicationPath         = applicationHandlerConfig.ApplicationPath;
+            NonResponsiveInterval   = applicationHandlerConfig.NonResponsiveInterval;
+            HeartbeatInterval       = applicationHandlerConfig.HeartbeatInterval;
+            MinProcesses            = applicationHandlerConfig.MinProcesses;
+            MaxProcesses            = applicationHandlerConfig.MaxProcesses;
+            KeepExistingNoProcesses = applicationHandlerConfig.KeepExistingNoProcesses;
+            UseHeartbeat            = applicationHandlerConfig.UseHeartbeat;
+            GrantKillRequest        = applicationHandlerConfig.GrantKillRequest;
+            Active                  = applicationHandlerConfig.Active;
+            StartupMonitorDelay     = applicationHandlerConfig.StartupMonitorDelay;
+            Active                  = applicationHandlerConfig.Active;
         }
 
         public void Check()
-        {
-            try
-            {
-                if (!Active) return;                
-                // Check if  new unmonitored process is running 
-                HandleDuplicateProcesses();
-                HandleNonResponsiveProcesses();
-                HandleExitedProcesses();
-                HandleUnmonitoredProcesses();
-                HandleProcessNotRunning();
-                HandleExceptionPopup();
-            }
-            catch (Exception ex)
-            {
-                Logger.Fatal("Watchdog monitoring thread threw exception {0}", ex.Message);
-            }
+        {         
+            if (!Active) return;
+            // Check if  new unmonitored process is running 
+            HandleDuplicateProcesses();
+            HandleNonResponsiveProcesses();
+            HandleExitedProcesses();
+            HandleUnmonitoredProcesses();
+            HandleProcessNotRunning();
         }
 
         
 
-        public void Restart()
-        {
-             _heartbeatServer.Restart();
-            foreach (var processHandler in ProcessHandlers)
-            {
-                processHandler.Reset();               
-            }
-            
-        }
-
         private void HandleProcessNotRunning()
-        {
-            if (DateTime.Now - _lastTimeStarted < TimeSpan.FromSeconds(TimeBetweenRetry))
-            {
-                return;
-            }        
+        {            
             var processes = Process.GetProcessesByName(ApplicationName);
 
             if (processes.Length == 0)
@@ -129,55 +92,35 @@ namespace WatchdogLib
                 // Start new process
                 var processHandler = new ProcessHandler
                 {
-                    WaitForExit           = false,
-                    StartingInterval      = StartingInterval,
-                    NonResponsiveInterval = NonResponsiveInterval,                   
+                    WaitForExit = false,
+                    NonResponsiveInterval = NonResponsiveInterval,
+                    StartingInterval = StartupMonitorDelay
                 };
-                if (File.Exists(ApplicationPath))
-                {
-                    Logger.Info("No process of application {0} is running, so one will be started", ApplicationName);
-                    processHandler.CallExecutable(ApplicationPath, ApplicationName, ApplicationArguments);                    
-                    ProcessHandlers.Add(processHandler);
-                }
-                else
-                {
-                    Logger.Error("Application path does not exist, cannot start app");
-                }
-                _lastTimeStarted = DateTime.Now;
+                Logger.Info("No process of application {0} is running, so one will be started", ApplicationName);
+                processHandler.CallExecutable(ApplicationPath, "");
+                ProcessHandlers.Add(processHandler);
             }        
         }
 
         private void HandleExitedProcesses()
-        {        
-            if (DateTime.Now - _lastTimeStarted < TimeSpan.FromSeconds(TimeBetweenRetry))
-            {
-                return;
-            }  
+        {
             for (int index = 0; index < ProcessHandlers.Count; index++)
             {
                 var processHandler = ProcessHandlers[index];
                 if (processHandler.HasExited)
                 {
-                    if (string.IsNullOrEmpty(processHandler.Name))
-                    {
-                        ProcessHandlers.Remove(processHandler);
-                    }
                     Logger.Warn("Process {0} has exited", processHandler.Name);
+                    //Debug.WriteLine("{0} has exited", processHandler.Name);
                     processHandler.Close();
                    
                     var notEnoughProcesses      = (ProcessNo(processHandler.Name) < MinProcesses);
                     var lessProcessesThanBefore = (ProcessNo(processHandler.Name) < MaxProcesses) &&  KeepExistingNoProcesses;
 
-                    if ((notEnoughProcesses || lessProcessesThanBefore) && File.Exists(processHandler.Executable))
+                    if (notEnoughProcesses || lessProcessesThanBefore)
                     {
                         if (notEnoughProcesses) Logger.Info("Process {0} has exited and no others are running, so start new", processHandler.Name);
                         if (lessProcessesThanBefore) Logger.Info("Process {0} has exited, and number of processed needs to maintained , so start new", processHandler.Name);
-                        if (!processHandler.CallExecutable())
-                        {
-                            Logger.Error("Process restart has failed ");
-                            ProcessHandlers.Remove(processHandler);
-                        }
-                        _lastTimeStarted = DateTime.Now;
+                        processHandler.CallExecutable();
                     }
                     else
                     {
@@ -188,115 +131,61 @@ namespace WatchdogLib
             }
         }
 
+
+
+        
+
+
         private void HandleNonResponsiveProcesses()
         {
-            //if (SleepDetector.Instance.JustSlept()) return;
             for (var index = 0; index < ProcessHandlers.Count; index++)
             {
-                var noHeartbeat = false;
                 var processHandler = ProcessHandlers[index];
-                var heartbeatClient = _heartbeatServer.FindByProcessName(processHandler.Name);
-
+                
                 if (processHandler.HasExited)  continue; // We will deal with this later
-                if (processHandler.IsStarting || SleepDetector.Instance.JustSlept())
+                if (processHandler.IsStarting)
                 {
+                    //Logger.Info("Process {0} is still in startup phase, no checking is being performed", processHandler.Name);
                     Debug.WriteLine("Process {0} is still in startup phase, no checking is being performed", processHandler.Name);
-                    processHandler.Reset();
-                    processHandler.Tries = 0;
-                    if (heartbeatClient != null)
-                    {
-                        heartbeatClient.Reset();
-                        heartbeatClient.Tries = 0;
-                    }
                     continue; // Is still starting up, so ignore
-                } else
-                {
-                    // Not starting up anymore, so see if we have a heartbeat connection
-                    if (heartbeatClient==null && !IgnoreHeartBeatIfNeverAcquired )
-                    {
-                        noHeartbeat = true;
-                    }
                 }
-
-
-                if (_heartbeatServer.HeartbeatTimedOut(processHandler.Name, (uint)HeartbeatInterval/(MaxTries*2)) && UseHeartbeat)
+                if (_heartbeatServer.HeartbeatTimedOut(processHandler.Name, HeartbeatInterval/2) && UseHeartbeat)
                 {
                     //todo: add throttling
                     Logger.Warn("No heartbeat received from process {0} within the soft limit", processHandler.Name);
+                    //Debug.WriteLine("Process {0} has no heartbeat within soft limit", processHandler.Name);
                 }
 
-                
-                
-                if (_heartbeatServer.HeartbeatTimedOut(processHandler.Name, (uint)HeartbeatInterval/MaxTries) && UseHeartbeat && heartbeatClient!=null)
-                {
-                    try{
-                        
-                        heartbeatClient.Tries++;
-                        if (heartbeatClient.Tries >= MaxTries)
-                        {
-                            Logger.Warn("Again no heartbeat received from process {0} within the limit, ", processHandler.Name);
-                            heartbeatClient.Reset();
-                            heartbeatClient.Tries = 0;
-                            noHeartbeat = true;
-                        }
-                        else
-                        {
-                            Logger.Warn("First time no heartbeat received from process {0} within the limit, ", processHandler.Name);
-                            heartbeatClient.Reset();
-                        
-                        }
-                    } catch { Logger.Warn("Error trying to access Heartbeat client ");}                    
-                }else
-                {
-                    try { 
-                        if (heartbeatClient!=null) heartbeatClient.Tries = 0;
-                    } catch {  }    
+                //if (processHandler.Responding && !_heartbeatServer.HeartbeatHardTimeout(processHandler.Name)) continue;
+                //Debug.WriteLine("Process {0} not responding", processHandler.Name);
 
-                }
-
-                var notRespondingAfterInterval = false;
-                if (processHandler.NotRespondingAfterInterval == Responsiveness.Unresponding)
-                {
-                    processHandler.Tries++;
-                    if (processHandler.Tries >= MaxTries)
-                    {
-                        Logger.Warn("Again no response from process {0} within the hard limit, ", processHandler.Name);
-                        processHandler.Reset();
-                        processHandler.Tries = 0;
-                         notRespondingAfterInterval = true;
-                    }
-                    else
-                    {
-                        Logger.Warn("First time no response from process {0} within the hard limit, ", processHandler.Name);
-                        processHandler.Reset();
-                       
-                    }
-                } else if(processHandler.NotRespondingAfterInterval == Responsiveness.Responding)
-                {
-                    processHandler.Tries = 0;
-                }
-
+                var notRespondingAfterInterval = processHandler.NotRespondingAfterInterval;
+                var noHeartbeat = _heartbeatServer.HeartbeatTimedOut(processHandler.Name,HeartbeatInterval) && UseHeartbeat;
                 var requestedKill = _heartbeatServer.KillRequested(processHandler.Name);
-                var performKill   = (notRespondingAfterInterval || noHeartbeat || requestedKill) && !SleepDetector.Instance.JustSlept();
-                var reason        = notRespondingAfterInterval ? "not responding" : noHeartbeat ? "not sending a heartbeat signal within hard limit" : "requesting to be killed"; 
+
+                var performKill = notRespondingAfterInterval || noHeartbeat || requestedKill;
+
+                var reason = notRespondingAfterInterval ? "not responding" : noHeartbeat ? "not sending a heartbeat signal within hard limit" : "requesting to be killed"; 
 
                 if (performKill)
                 {
-                    if (SleepDetector.Instance.JustSlept()) return;
                     Logger.Error("process {0} is {1}, and will be killed ", processHandler.Name, reason); 
+                    //Debug.WriteLine("Process {0} is not responsive, or no heartbeat within hard limit",processHandler.Name);
+
                     if (processHandler.Kill())
                     {
                       
                         Logger.Error("Process {0} was {1} and has been successfully killed ", processHandler.Name, reason);
-
+                        //Debug.WriteLine("Process {0} has been killed due to non-responsiveness not responding",processHandler.Name);
                         processHandler.Close();
                         var notEnoughProcesses      = (ProcessNo(processHandler.Name) < MinProcesses);
                         var lessProcessesThanBefore = (ProcessNo(processHandler.Name) < MaxProcesses) && KeepExistingNoProcesses;
 
+
+                        //if ((ProcessNo(processHandler.Name) == 0) || (ProcessNo(processHandler.Name) > 0) && (KeepExistingNoProcesses && !EnsureSingleProcess))
                         if (notEnoughProcesses || lessProcessesThanBefore)
                         {
                             processHandler.CallExecutable();
-                            _lastTimeStarted = DateTime.Now;
                         }
                         else
                         {
@@ -305,8 +194,9 @@ namespace WatchdogLib
                     }
                     else
                     {
-                        // to do smarter handling of this case (try again in next loop, put to sleep, etc)
+                        // todo smarter handling of this case (try again in next loop, put to sleep, etc)
                         Logger.Error("Process {0} was {1} but could not be successfully killed ", processHandler.Name, reason);
+                        //Debug.WriteLine("Process {0} could not be killed after getting non responsive",processHandler.Name);
                     }
                 }
             }
@@ -314,16 +204,22 @@ namespace WatchdogLib
 
         public void HandleDuplicateProcesses()
         {
+            //if (ProcessNo(ApplicationName) < MaxProcesses))
             {
-                if (SleepDetector.Instance.JustSlept()) return;
+
                 var processes = Process.GetProcessesByName(ApplicationName);
+
+
                 if (processes.Length <= MaxProcesses) return;
+                //if (processes.Length <= 1) return ;
+
 
                 Logger.Error("multiple processes of application {0} are running, all but one will be killed ", ApplicationName);
 
                 var remainingProcesses = new List<Process>();
-                var result             = true;
-                var nummProcesses      = processes.Length;
+                var result = true;
+
+                var nummProcesses = processes.Length;
                 //Wield out the bad applications first
                 foreach (var process in processes)
                 {
@@ -333,8 +229,8 @@ namespace WatchdogLib
                     if (nummProcesses <= MaxProcesses) break;
                     if (!process.Responding)
                     {
-                        if (SleepDetector.Instance.JustSlept()) return;
-                        Logger.Warn("unresponsive duplicate process {0} will now be killed ", ApplicationName);                       
+                        Logger.Warn("unresponsive duplicate process {0} will now be killed ", ApplicationName);
+
                         var currResult = (processHandler != null)?processHandler.Kill():ProcessUtils.KillProcess(process);
                         if (currResult && processHandler != null)
                         {
@@ -352,15 +248,16 @@ namespace WatchdogLib
                     else
                     {
                         remainingProcesses.Add(process);
-                    } 
+                    }
+
+                    //Return the other process instance.  
                 }
 
                 //Loop through the running processes in with the same name  
                 for (var index = MaxProcesses; index < remainingProcesses.Count; index++)
                 {
-                    var process        = remainingProcesses[index];
+                    var process = remainingProcesses[index];
                     var processHandler = FindProcessHandler(process);
-                    if (SleepDetector.Instance.JustSlept()) return;
                     Logger.Warn("unresponsive duplicate process {0} will now be killed ", ApplicationName);
                     var currResult = ProcessUtils.KillProcess(process);
                     if (currResult && processHandler != null)
@@ -375,24 +272,15 @@ namespace WatchdogLib
                     }
                     result = result && currResult;
                 }
+
             }
         }
-
-        private void HandleExceptionPopup()
-        {
-            // Loop through all windows
-            //var windows = CWindow.TopLevelWindows;
-            //foreach (var window in windows)
-            //{
-            //    window.
-            //}
-        }
-
 
         private ProcessHandler FindProcessHandler(Process process)
         {
             return ProcessHandlers.Find((processHander) => processHander.Process.Id == process.Id);
         }
+
 
         private int ProcessNo(string applicationName)
         {
@@ -408,24 +296,28 @@ namespace WatchdogLib
                 {
                     if (ProcessHandlers.All(procHandle => procHandle.Process==null || procHandle.Process.Id != process.Id))
                     {
+                        // This process o
                         var processHandler = new ProcessHandler
                         {
                             WaitForExit = false,
                             NonResponsiveInterval = NonResponsiveInterval,
-                            StartingInterval = StartingInterval
                         };
                         processHandler.MonitorProcess(process);
                         ProcessHandlers.Add(processHandler);
                     }
+
+                    // Perform 
                 }
             }
             catch (Exception ex)
             {
                 Logger.Warn("Error while starting to monitor application {0}: {1}", ApplicationName, ex.Message);
-                return false;
+                //Debug.WriteLine(ex.Message);
             }
 
             return true;
         }
+
+
     }
 }

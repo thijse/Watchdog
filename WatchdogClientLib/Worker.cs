@@ -4,9 +4,22 @@ using System.Threading.Tasks;
 
 namespace WatchdogClient.Threading
 {
-    internal class Worker
+    class Worker
     {
         private readonly TaskScheduler _callbackThread;
+
+        private static TaskScheduler CurrentTaskScheduler
+        {
+            get
+            {
+                return (SynchronizationContext.Current != null
+                            ? TaskScheduler.FromCurrentSynchronizationContext()
+                            : TaskScheduler.Default);
+            }
+        }
+
+        public event WorkerSucceededEventHandler Succeeded;
+        public event WorkerExceptionEventHandler Error;
 
         public Worker() : this(CurrentTaskScheduler)
         {
@@ -16,19 +29,6 @@ namespace WatchdogClient.Threading
         {
             _callbackThread = callbackThread;
         }
-
-        private static TaskScheduler CurrentTaskScheduler
-        {
-            get
-            {
-                return SynchronizationContext.Current != null
-                    ? TaskScheduler.FromCurrentSynchronizationContext()
-                    : TaskScheduler.Default;
-            }
-        }
-
-        public event WorkerSucceededEventHandler Succeeded;
-        public event WorkerExceptionEventHandler Error;
 
         public void DoWork(Action action)
         {
@@ -68,6 +68,5 @@ namespace WatchdogClient.Threading
     }
 
     internal delegate void WorkerSucceededEventHandler();
-
     internal delegate void WorkerExceptionEventHandler(Exception exception);
 }

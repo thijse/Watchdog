@@ -1307,7 +1307,7 @@
         </xs:attribute>
         <xs:attribute name="endpointConfigurationName" type="xs:string">
           <xs:annotation>
-            <xs:documentation>Name of the endpoint configuration in WCF rebootConfiguration file.</xs:documentation>
+            <xs:documentation>Name of the endpoint configuration in WCF configuration file.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="useOneWayContract" type="xs:boolean">

@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RebootForm));
             this.textBoxRebootAfterDays = new System.Windows.Forms.TextBox();
             this.label11 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -214,9 +213,8 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBoxRebootAfterDays);
             this.Controls.Add(this.label11);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "RebootForm";
-            this.Text = "Reboot";
+            this.Text = "RebootForm";
             this.ResumeLayout(false);
             this.PerformLayout();
 
