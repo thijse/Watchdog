@@ -19,6 +19,10 @@ The application allows watching as many applications as you need. The Crashing A
 
 ## Watchdog settings 
 Per application many watchdog parameters can be customized  
+* Path         - The path of the application. The working directory is also based on this path
+* Arguments    - Startup arguments of the application
+* Process name - Name of the process when running. This is often the application name, but not always. It is used to monitor if the application is running
+* 
 ![Watchdog application settings](/Screenshots/ApplicationSettingsMenu.png)
 
 ## Persistence 
