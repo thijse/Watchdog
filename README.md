@@ -18,12 +18,21 @@ The application allows watching as many applications as you need. The Crashing A
 ![Watchdog application selection](/Screenshots/ConfigurationForm.png)
 
 ## Watchdog settings 
+![Watchdog application settings](/Screenshots/ApplicationSettingsMenu.png)
 Per application many watchdog parameters can be customized  
 * Path         - The path of the application. The working directory is also based on this path
 * Arguments    - Startup arguments of the application
-* Process name - Name of the process when running. This is often the application name, but not always. It is used to monitor if the application is running
+* Process name - Name of the process when running. This is often the application name, but not always. It is used to monitor if the application (and how many) is running. 
+* Start once   - Allows you to test if the settings are correct and will indeed start up the application
+* Min number of processes - The minimal number of processes of the application that should be running, this is typically 1, but for some applications (like servers) you may want to run more
+* Max number of processes - If more than the indicated number of processes are running, processes will be killed
+* Use Heartbeat  - This refers to the heartbeat library you can implement in your own application
+* Ignore Heartbeat if never acquired - This means that if your application will only be restarted if it had a heartbeat at some point but it stopped
+* Max interval heartbeats - Maximum time between hearbeats. If more time occurs between two heartbeats, the watchdog wil restart. Make sure your application sends a heartbeat more often (at least a factor 2)
+* Max unresponsive interval - Maximum time that the application may be unresponsive.
+* Startup monitor delay - the time between starting an application and the first time that polling occurs. It may take an application some time to start properly and become responsive
+* Time between retries - the time between restarting the application
 * 
-![Watchdog application settings](/Screenshots/ApplicationSettingsMenu.png)
 
 ## Persistence 
 The application can be configured to start at on startup and/or be periodically checked to be running  
