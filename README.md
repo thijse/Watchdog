@@ -42,3 +42,7 @@ The application can be configured to start at on startup and/or be periodically 
 ## Automatic reboot
 The application allows automatic, periodic reboots This may be useful to keep the system and it's applications run reliably.   
 ![Watchdog reboot menu](/Screenshots/RebootMenu.png)
+
+## Copyright
+
+Watchdog is provided under MIT License.  Copyright © 2018, 2019, 2020
