@@ -18,8 +18,8 @@ The application allows watching as many applications as you need. The Crashing A
 ![Watchdog application selection](/Screenshots/ConfigurationForm.png)
 
 ## Watchdog settings 
-![Watchdog application settings](/Screenshots/ApplicationSettingsMenu.png)
-Per application many watchdog parameters can be customized  
+![Watchdog application settings](/Screenshots/ApplicationSettingsMenu.png)  
+Multiple watchdog parameters can be modified per application  
 * Path         - The path of the application. The working directory is also based on this path
 * Arguments    - Startup arguments of the application
 * Process name - Name of the process when running. This is often the application name, but not always. It is used to monitor if the application (and how many) is running. 
@@ -32,12 +32,13 @@ Per application many watchdog parameters can be customized
 * Max unresponsive interval - Maximum time that the application may be unresponsive.
 * Startup monitor delay - the time between starting an application and the first time that polling occurs. It may take an application some time to start properly and become responsive
 * Time between retries - the time between restarting the application
-* 
+* Active / in active - monitoring starts when the application is set to "Active" (and the watchdog is running)
 
 ## Persistence 
 The application can be configured to start at on startup and/or be periodically checked to be running  
-![Watchdog general settings, determine restart behaviour](/Screenshots/GeneralSettingsMenu.png)
-
+![Watchdog general settings, determine restart behaviour](/Screenshots/GeneralSettingsMenu.png)  
+* Start Watchdog on Windows Startup - The application starts when the user logs in (the application does not run as a service) 
+* Periodically check if Watchdog is running - If enabled the Task Scheduler will try to start the application every 5 minutes
 ## Automatic reboot
-The application allows automatic reboots  
+The application allows automatic, periodic reboots This may be useful to keep the system and it's applications run reliably.   
 ![Watchdog reboot menu](/Screenshots/RebootMenu.png)
