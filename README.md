@@ -10,7 +10,7 @@ The watchdog also comes with a single client library that you can integrate in y
 
 # Overview
 ## System tray
-The application lives in the system tray, where it can be enabled, disabled and configured. The application can be configured through Settings and stopped or exited. Note that if your exit the watchdog it may automatically respawn, based on the general settings. The watchdog can also be stopped using the global shortcut using [CTR][ALT][W]. This is useful if the application that is monitored blocks the watchdog UI.
+The application lives in the system tray, where it can be enabled, disabled and configured. The application can be configured through Settings and stopped or exited. Note that if your exit the watchdog it may automatically respawn, based on the general settings. The watchdog can also be stopped using the global shortcut using [CTR][ALT][W]. This is useful if the application that is monitored blocks the watchdog UI.  
 ![Watchdog in system tray](/Screenshots/TaskbarMenu.png)
 
 ## Selecting applications to be watched
